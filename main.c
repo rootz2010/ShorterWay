@@ -57,13 +57,13 @@ struct chained_list ** convert_matrix(int ** tab) {
 /* function to convert from chained_list to matrix ? is there a need for it ? */
 
 /* function to print the matrix in the terminal ... simple displaying method */
-void print_matrix(int ** tableau) {
+void print_matrix(int ** tab) {
 	
 	unsigned long int i, j;
 	
 	for (i=0; i<nb_summit; i++) {
 		for (j=0; j<nb_summit; j++) {
-			printf("%d ", tableau[i][j]);
+			printf("%d ", tab[i][j]);
 		}
 		printf("\n");
 	}
@@ -92,11 +92,11 @@ int ** random_graph() {
 	
 	unsigned long int i, j;
 	
-	int **tableau = (int **) calloc(nb_summit, sizeof(unsigned long int *));
+	int **tab = (int **) calloc(nb_summit, sizeof(unsigned long int *));
 	
 	/* allocate space for our little matrix */
 	for (i=0; i<nb_summit; i++) {
-		tableau[i] = (int *) calloc(nb_summit, sizeof(unsigned long int));
+		tab[i] = (int *) calloc(nb_summit, sizeof(unsigned long int));
 	}
 	
 	/* generate random arc with its value */
@@ -106,20 +106,53 @@ int ** random_graph() {
 			if (j != i) {
 				/* we fill the value only if we are under the FILLING percentage */
 				if (rand()/(RAND_MAX + 1.) < FILLING) {
-					tableau[i][j] = (int) (1 + round(rand()/(RAND_MAX + 1.) * (INFI_LOCAL -1 )));
+					tab[i][j] = (int) (1 + round(rand()/(RAND_MAX + 1.) * (INFI_LOCAL -1 )));
 				}
 				else {
-					tableau[i][j] = INFI_LOCAL;
+					tab[i][j] = INFI_LOCAL;
 				}
 
 			}
 			else {
-				tableau[i][i] = 0;
+				tab[i][i] = 0;
 			}
 		}
 	}
 	
-	return tableau;
+	return tab;
+}
+
+/* function to free a chained_list */
+void free_list(struct chained_list ** list) {
+	unsigned long int i;
+	
+	struct chained_list * pointer;
+	struct chained_list * tmp;
+	
+	for (i=0; i<nb_summit; i++) {
+		pointer = list[i];
+		/* to suppress the case of an empty row */
+		if (pointer != NULL) {
+			/* then we free as we go further in the graph */
+			while (pointer->next != NULL) {
+				tmp = pointer->next;
+				free(pointer);
+				pointer = tmp;
+			}
+		}
+	}
+	free(list);
+	printf("list memory free\n");
+}
+
+/* function to free a matrix, not so complicated */
+void free_matrix(int ** matrix) {
+	unsigned long int i;
+	for (i=0; i<nb_summit; i++) {
+		free(matrix[i]);
+	}
+	free(matrix);
+	printf("matrix memory free\n");
 }
 
 int main (int argc, const char * argv[]) {
@@ -130,9 +163,13 @@ int main (int argc, const char * argv[]) {
 	/* first we use a matrix to generate the graph. then we will have a function
 	 to make the conversion to the struct */
 	
-	int ** tableau;
-	tableau = random_graph();
-	print_matrix(tableau);
-	print_chained_list(convert_matrix(tableau));
+	int ** tab;
+	struct chained_list ** liste;
+	tab = random_graph();
+	print_matrix(tab);
+	liste = convert_matrix(tab);
+	print_chained_list(liste);
+	free_list(liste);
+	free_matrix(tab);
     return 0;
 }
